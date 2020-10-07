@@ -1,14 +1,10 @@
 void game() {
-  // read the state of the pushbutton value
-  stateB = digitalRead(buttonPinB);
-  stateR = digitalRead(buttonPinR);
-
-  if (stateB == HIGH && stateLED != 0) {
+  if (digitalRead(buttonPinB) == LOW && stateLED != 0) {
     stateLED = 0;
     counterPoint = 0;
     digitalWrite(ledPinB, HIGH);
     digitalWrite(ledPinR, LOW);
-  } else if (stateR == HIGH && stateLED != 1) {
+  } else if (digitalRead(buttonPinR) == LOW && stateLED != 1) {
     stateLED = 1;
     counterPoint = 0;
     digitalWrite(ledPinR, HIGH);

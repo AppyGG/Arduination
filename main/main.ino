@@ -7,39 +7,35 @@ const byte buttonPinB = 8;     // blue button pin
 const byte buttonPinR = 9;     // red button pin
 const byte ledPinB =  10;      // blue LED pin
 const byte ledPinR =  11;      // red LED pin
-const byte btnNext = 12;       // btn Next for menus
-const byte btnOk = 13;         // btn OK for menus
+const byte btnOk = 12;         // btn OK for menus
 
 // variables will change
-bool stateB = false;      // variable for reading the buttonB status
 unsigned int countB = 0;
-bool stateR = false;      // variable for reading the buttonR status
 unsigned int countR = 0;
 unsigned int stateLED = 2;    // 0 = Blue |1 = Red | 2 = Both off (start position)
 String textCountB = "";
 String textCountR = "";
 
-// button settings
-unsigned int statusNext = 0;
-unsigned int buttonLastState = LOW;
-unsigned int buttonCurrentState;
-unsigned int statusOk = 0;
-unsigned long buttonPressedTime;
-unsigned long buttonReleasedTime;
-const int SHORT_PRESS_TIME = 1000;
-const int LONG_PRESS_TIME  = 1000;
+// Black button settings
+unsigned long buttonTimer = 0;
+const long longPressTime  = 750;
+boolean buttonActive = false;
+boolean longPressActive = false;
 
+// Menu settings
 unsigned int menuState = 0;
 unsigned int generalStatus = 0;
 bool gamePaused = false;
 bool gameInitialized = false;
 
+// Game timer
 unsigned long timer = 0;
 unsigned long previousMillis = 0;
 const long interval = 1000;
 unsigned int counterPoint = 0;
 const byte pointInterval = 10;
 
+// Pause char
 byte pauseChar[8] = {
   B00000,
   B11011,
@@ -62,60 +58,54 @@ void setup() {
   pinMode(ledPinB, OUTPUT);
   pinMode(ledPinR, OUTPUT);
   // initialize the pushbutton pin as an input
-  pinMode(buttonPinB, INPUT);
-  pinMode(buttonPinR, INPUT);
+  pinMode(buttonPinB, INPUT_PULLUP);
+  pinMode(buttonPinR, INPUT_PULLUP);
   // initialize menu pushbutton as an input
-  pinMode(btnNext, INPUT_PULLUP);
   pinMode(btnOk, INPUT_PULLUP);  
 }
 
 void loop() {
   unsigned long currentMillis = millis();
-  buttonCurrentState = digitalRead(btnOk);
-  
-  if( buttonLastState == HIGH && buttonCurrentState == LOW ) {
-      buttonPressedTime = millis();
-  } else if (buttonLastState == LOW && buttonCurrentState == HIGH && (currentMillis - buttonPressedTime) < LONG_PRESS_TIME) { // Only trigger when released TODO : change that
-      buttonReleasedTime = millis();
+  if (digitalRead(btnOk) == LOW) { // Pressed
+    if (buttonActive == false) { // First time pressed, init short or long press detection
+      buttonActive = true;
+      buttonTimer = millis();
+    }
 
-      if(generalStatus == 0){ // On menu
-          //if( pressDuration < SHORT_PRESS_TIME ) { // Nav cycle
-              menuNavigate();
-          //}
+    if ((millis() - buttonTimer > longPressTime) && (longPressActive == false)) { // LongPressed
+      longPressActive = true;
+      if (generalStatus == 0) { // On menu
+        menuValidate();
       } else if (generalStatus == 2) { // On game screen
-          //if( pressDuration < SHORT_PRESS_TIME ) { // Pause cycle
-              generalStatus = 3;
-          //}
+        lcd.clear();
+        gameInitialized = false;
+        generalStatus = 0;
       } else if (generalStatus == 3) { // Pause screen
-          //if( pressDuration < SHORT_PRESS_TIME ) { // Unpause game
-              lcd.setCursor(14, 1);
-              lcd.print(F(" "));
-              generalStatus = 2;
-          //}
+        lcd.clear(); 
+        gameInitialized = false;
+        timer = 0;
+        generalStatus = 0;
       }
-  } else if (buttonLastState == LOW && buttonCurrentState == LOW && (currentMillis - buttonPressedTime) > LONG_PRESS_TIME) { // Long press not yet released
-       if(generalStatus == 0){ // On menu
-          //if ( pressDuration > LONG_PRESS_TIME ) { // Nav ok
-              menuValidate();
-          //}
-      } else if (generalStatus == 2) { // On game screen
-          //if ( pressDuration > LONG_PRESS_TIME ) { // Long press when game on (quit game ?)
-              lcd.clear();
-              gameInitialized = false;
-              generalStatus = 0;
-          //}
-      } else if (generalStatus == 3) { // Pause screen
-          //if ( pressDuration > LONG_PRESS_TIME ) { // Quit game
-              lcd.clear(); 
-              gameInitialized = false;
-              timer = 0;
-              generalStatus = 0;
-          //}
+    }
+  } else { // Not Pressed
+    if (buttonActive == true) { // Button released
+      if (longPressActive == true) { // Reset long pressed
+        longPressActive = false;
+      } else {
+        if (generalStatus == 0) { // On menu
+          menuNavigate();
+        } else if (generalStatus == 2) { // On game screen
+          generalStatus = 3;
+        } else if (generalStatus == 3) { // Pause screen
+          lcd.setCursor(14, 1);
+          lcd.print(F(" "));
+          generalStatus = 2;
+        }
       }
+      buttonActive = false;
+    }
   }
-
-  buttonLastState = buttonCurrentState;
-
+  
   switch(generalStatus) {
     case 0:
       displayMenu();
