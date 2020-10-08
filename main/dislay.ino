@@ -26,6 +26,7 @@ void displayInGame() {
        delay(250);
     }
     lcd.home();           // Reset cursor
+    lcd.setCursor(0, 0);
     lcd.print(F("Blue  "));  // Print blue team
     lcd.print(countB);
     lcd.setCursor(11, 0); // Print timer
@@ -33,4 +34,17 @@ void displayInGame() {
     lcd.setCursor(0, 1);
     lcd.print(F("Red   "));  // Print red team
     lcd.print(countR);
+}
+
+void displayScores() {
+    lcd.home();
+    lcd.print(F("SCORES"));
+    lcd.setCursor(11,0);
+    lcd.print(secondsToHMS(EEPROM.read(SavedGameTimerADDR)));
+    lcd.setCursor(0,1);
+    lcd.print("B: ");
+    lcd.print(EEPROM.read(SavedBlueScoreADDR));
+    lcd.setCursor(8,1);
+    lcd.print("R: ");
+    lcd.print(EEPROM.read(SavedRedScoreADDR));
 }

@@ -1,4 +1,5 @@
 #include "LiquidCrystal.h"
+#include "EEPROM.h" 
 
 LiquidCrystal lcd(7,6,5,4,3,2);
 
@@ -8,6 +9,14 @@ const byte buttonPinR = 9;     // red button pin
 const byte ledPinB =  10;      // blue LED pin
 const byte ledPinR =  11;      // red LED pin
 const byte btnOk = 12;         // btn OK for menus
+const int GameRunningADDR = 0;        // Byte address of running game status
+const int BlueScoreADDR = 1;          // Byte address of running game blue score
+const int RedScoreADDR = 2;           // Byte address of running game red score
+const int ScoringTeamADDR = 3;        // Byte address of running game scoring team
+const int GameTimerADDR = 4;          // Byte address of running game timer
+const int SavedBlueScoreADDR = 5;    // Byte address of running game blue score
+const int SavedRedScoreADDR = 6;     // Byte address of running game red score
+const int SavedGameTimerADDR = 7;     // Byte address of running game duration
 
 // variables will change
 unsigned int countB = 0;
@@ -24,9 +33,10 @@ boolean longPressActive = false;
 
 // Menu settings
 unsigned int menuState = 0;
-unsigned int generalStatus = 0;
+unsigned int generalStatus = 0; // 0 = MENU | 1 = SCORES | 2 = GAME | 3 = PAUSE SCREEN
 bool gamePaused = false;
 bool gameInitialized = false;
+bool scoresDisplayed = false;
 
 // Game timer
 unsigned long timer = 0;
@@ -61,7 +71,20 @@ void setup() {
   pinMode(buttonPinB, INPUT_PULLUP);
   pinMode(buttonPinR, INPUT_PULLUP);
   // initialize menu pushbutton as an input
-  pinMode(btnOk, INPUT_PULLUP);  
+  pinMode(btnOk, INPUT_PULLUP);
+
+  if (EEPROM.read(GameRunningADDR) == 1) {
+    countB = EEPROM.read(BlueScoreADDR);
+    countR = EEPROM.read(RedScoreADDR);
+    stateLED = EEPROM.read(ScoringTeamADDR);
+    timer  = EEPROM.read(GameTimerADDR);
+    if (stateLED == 0) {
+      digitalWrite(ledPinB, HIGH);
+    } else if (stateLED == 1) {
+      digitalWrite(ledPinR, HIGH);
+    }
+    generalStatus = 2;
+  }
 }
 
 void loop() {
@@ -74,16 +97,21 @@ void loop() {
 
     if ((millis() - buttonTimer > longPressTime) && (longPressActive == false)) { // LongPressed
       longPressActive = true;
-      if (generalStatus == 0) { // On menu
+      if (generalStatus == 0) { // On menu : VALIDATE
         menuValidate();
-      } else if (generalStatus == 2) { // On game screen
+      } else if (generalStatus == 1) { // On scores : RETURN MENU
+        lcd.clear();
+        scoresDisplayed = false;
+        generalStatus = 0;
+      } else if (generalStatus == 2) { // On game screen: QUIT GAME
         lcd.clear();
         gameInitialized = false;
         generalStatus = 0;
-      } else if (generalStatus == 3) { // Pause screen
+        eraseRunningGameScores();
+      } else if (generalStatus == 3) { // Pause screen : QUIT GAME / RESET SCORES
         lcd.clear(); 
         gameInitialized = false;
-        timer = 0;
+        eraseRunningGameScores();
         generalStatus = 0;
       }
     }
@@ -92,11 +120,13 @@ void loop() {
       if (longPressActive == true) { // Reset long pressed
         longPressActive = false;
       } else {
-        if (generalStatus == 0) { // On menu
+        if (generalStatus == 0) { // On menu : NAVIGATE MENU
           menuNavigate();
-        } else if (generalStatus == 2) { // On game screen
+        } else if (generalStatus == 1) { // On scores : QUIT SCORES
+          
+        } else if (generalStatus == 2) { // On game screen : PAUSE GAME
           generalStatus = 3;
-        } else if (generalStatus == 3) { // Pause screen
+        } else if (generalStatus == 3) { // Pause screen : UNPAUSE GAME
           lcd.setCursor(14, 1);
           lcd.print(F(" "));
           generalStatus = 2;
@@ -112,7 +142,11 @@ void loop() {
       resetLEDs();
       break;
     case 1:
-      scores();
+      if (!scoresDisplayed) {
+        lcd.clear();
+        scoresDisplayed = true;
+      }
+      displayScores();
       break;
     case 2:
       game();

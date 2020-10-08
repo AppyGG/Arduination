@@ -18,10 +18,12 @@ void game() {
       // LED Management
       if (stateLED == 0) { // Blue
         countB++;
+        saveRunnningGameScores();
         digitalWrite(ledPinB, HIGH);
         digitalWrite(ledPinR, LOW);
       } else if (stateLED == 1) { // Red
         countR++;
+        saveRunnningGameScores();
         digitalWrite(ledPinR, HIGH);
         digitalWrite(ledPinB, LOW);
       }
@@ -37,12 +39,27 @@ void game() {
 }
 
 void paused() {
-    displayInGame();
-    lcd.setCursor(14, 1);
-    lcd.write(byte(0));
-    if (stateLED != 0) {
-        digitalWrite(ledPinB, LOW);
-      } else if (stateLED = 1) {
-        digitalWrite(ledPinR, LOW);
-    }
+  displayInGame();
+  lcd.setCursor(14, 1);
+  lcd.write(byte(0));
+}
+
+void saveRunnningGameScores() {
+  EEPROM.update(GameRunningADDR, 1);
+  EEPROM.update(BlueScoreADDR, countB);
+  EEPROM.update(RedScoreADDR, countR);
+  EEPROM.update(GameTimerADDR, timer);
+  EEPROM.update(ScoringTeamADDR, stateLED);
+}
+
+void eraseRunningGameScores() {
+  if (countB + countR > 0){
+    EEPROM.update(GameRunningADDR, 0);
+    EEPROM.update(SavedBlueScoreADDR, countB);
+    EEPROM.update(SavedRedScoreADDR, countR);
+    EEPROM.update(SavedGameTimerADDR, timer);
+    timer = 0;
+    countB = 0;
+    countR = 0;
+  }
 }
