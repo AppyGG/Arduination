@@ -11,12 +11,12 @@ const byte ledPinR =  11;      // red LED pin
 const byte btnOk = 12;         // btn OK for menus
 const int GameRunningADDR = 0;        // Byte address of running game status
 const int BlueScoreADDR = 1;          // Byte address of running game blue score
-const int RedScoreADDR = 2;           // Byte address of running game red score
-const int ScoringTeamADDR = 3;        // Byte address of running game scoring team
-const int GameTimerADDR = 4;          // Byte address of running game timer
-const int SavedBlueScoreADDR = 5;    // Byte address of running game blue score
-const int SavedRedScoreADDR = 6;     // Byte address of running game red score
-const int SavedGameTimerADDR = 7;     // Byte address of running game duration
+const int RedScoreADDR = 3;           // Byte address of running game red score
+const int ScoringTeamADDR = 5;        // Byte address of running game scoring team
+const int GameTimerADDR = 7;          // Byte address of running game timer
+const int SavedBlueScoreADDR = 9;    // Byte address of running game blue score
+const int SavedRedScoreADDR = 11;     // Byte address of running game red score
+const int SavedGameTimerADDR = 13;     // Byte address of running game duration
 
 // variables will change
 unsigned int countB = 0;
