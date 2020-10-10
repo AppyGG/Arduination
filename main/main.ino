@@ -1,29 +1,27 @@
 #include "LiquidCrystal.h"
-#include "EEPROM.h" 
+#include "EEPROM.h"
 
-LiquidCrystal lcd(7,6,5,4,3,2);
+LiquidCrystal lcd(7, 6, 5, 4, 3, 2);
 
 // constants won't change. They're used here to set pin numbers
-const byte buttonPinB = 8;     // blue button pin
-const byte buttonPinR = 9;     // red button pin
-const byte ledPinB =  10;      // blue LED pin
-const byte ledPinR =  11;      // red LED pin
+const byte buttonPinB = 13;     // blue button pin
+const byte buttonPinR = 11;     // red button pin
+const byte ledPinB =  9;      // blue LED pin
+const byte ledPinR =  8;      // red LED pin
 const byte btnOk = 12;         // btn OK for menus
 const int GameRunningADDR = 0;        // Byte address of running game status
-const int BlueScoreADDR = 1;          // Byte address of running game blue score
-const int RedScoreADDR = 3;           // Byte address of running game red score
-const int ScoringTeamADDR = 5;        // Byte address of running game scoring team
-const int GameTimerADDR = 7;          // Byte address of running game timer
-const int SavedBlueScoreADDR = 9;    // Byte address of running game blue score
-const int SavedRedScoreADDR = 11;     // Byte address of running game red score
-const int SavedGameTimerADDR = 13;     // Byte address of running game duration
+const int BlueScoreADDR = 4;          // Byte address of running game blue score
+const int RedScoreADDR = 8;           // Byte address of running game red score
+const int ScoringTeamADDR = 12;       // Byte address of running game scoring team
+const int GameTimerADDR = 16;         // Byte address of running game timer
+const int SavedBlueScoreADDR = 20;    // Byte address of running game blue score
+const int SavedRedScoreADDR = 24;     // Byte address of running game red score
+const int SavedGameTimerADDR = 28;    // Byte address of running game duration
 
 // variables will change
 unsigned int countB = 0;
 unsigned int countR = 0;
-unsigned int stateLED = 2;    // 0 = Blue |1 = Red | 2 = Both off (start position)
-String textCountB = "";
-String textCountR = "";
+byte stateLED = 2;    // 0 = Blue |1 = Red | 2 = Both off (start position)
 
 // Black button settings
 unsigned long buttonTimer = 0;
@@ -60,10 +58,10 @@ void setup() {
   Serial.begin(9600); // open the serial port at 9600 bps
 
   lcd.createChar(0, pauseChar);
-  lcd.begin(16,2);// Initialize LCD
+  lcd.begin(16, 2); // Initialize LCD
   lcd.home();
   lcd.clear();
-  
+
   // initialize the LED pin as an output
   pinMode(ledPinB, OUTPUT);
   pinMode(ledPinR, OUTPUT);
@@ -74,10 +72,10 @@ void setup() {
   pinMode(btnOk, INPUT_PULLUP);
 
   if (EEPROM.read(GameRunningADDR) == 1) {
-    countB = EEPROM.read(BlueScoreADDR);
-    countR = EEPROM.read(RedScoreADDR);
+    countB = readUnsignedIntFromEEPROM(BlueScoreADDR);
+    countR = readUnsignedIntFromEEPROM(RedScoreADDR);
     stateLED = EEPROM.read(ScoringTeamADDR);
-    timer  = EEPROM.read(GameTimerADDR);
+    timer  = readLongFromEEPROM(GameTimerADDR);
     if (stateLED == 0) {
       digitalWrite(ledPinB, HIGH);
     } else if (stateLED == 1) {
@@ -109,7 +107,7 @@ void loop() {
         generalStatus = 0;
         eraseRunningGameScores();
       } else if (generalStatus == 3) { // Pause screen : QUIT GAME / RESET SCORES
-        lcd.clear(); 
+        lcd.clear();
         gameInitialized = false;
         eraseRunningGameScores();
         generalStatus = 0;
@@ -123,7 +121,7 @@ void loop() {
         if (generalStatus == 0) { // On menu : NAVIGATE MENU
           menuNavigate();
         } else if (generalStatus == 1) { // On scores : QUIT SCORES
-          
+
         } else if (generalStatus == 2) { // On game screen : PAUSE GAME
           generalStatus = 3;
         } else if (generalStatus == 3) { // Pause screen : UNPAUSE GAME
@@ -135,8 +133,8 @@ void loop() {
       buttonActive = false;
     }
   }
-  
-  switch(generalStatus) {
+
+  switch (generalStatus) {
     case 0:
       displayMenu();
       resetLEDs();
@@ -158,22 +156,22 @@ void loop() {
 }
 
 void menuNavigate() {
-    if (menuState == 1) {
-       menuState = 0;
-    } else {
-       menuState = 1;
-    }
+  if (menuState == 1) {
+    menuState = 0;
+  } else {
+    menuState = 1;
+  }
 }
 
 void menuValidate() {
-    if (menuState == 0) {
-       generalStatus = 1;
-    } else {
-       generalStatus = 2;
-    }
+  if (menuState == 0) {
+    generalStatus = 1;
+  } else {
+    generalStatus = 2;
+  }
 }
 
 void resetLEDs() {
-    digitalWrite(ledPinB, LOW);
-    digitalWrite(ledPinR, LOW);
+  digitalWrite(ledPinB, LOW);
+  digitalWrite(ledPinR, LOW);
 }

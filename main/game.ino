@@ -46,18 +46,19 @@ void paused() {
 
 void saveRunnningGameScores() {
   EEPROM.update(GameRunningADDR, 1);
-  EEPROM.update(BlueScoreADDR, countB);
-  EEPROM.update(RedScoreADDR, countR);
-  EEPROM.update(GameTimerADDR, timer);
+  writeUnsignedIntIntoEEPROM(BlueScoreADDR, countB);
+  writeUnsignedIntIntoEEPROM(RedScoreADDR, countR);
+  writeLongIntoEEPROM(GameTimerADDR, timer);
   EEPROM.update(ScoringTeamADDR, stateLED);
 }
 
 void eraseRunningGameScores() {
   if (countB + countR > 0){
     EEPROM.update(GameRunningADDR, 0);
-    EEPROM.update(SavedBlueScoreADDR, countB);
-    EEPROM.update(SavedRedScoreADDR, countR);
-    EEPROM.update(SavedGameTimerADDR, timer);
+    writeUnsignedIntIntoEEPROM(SavedBlueScoreADDR, countB);
+    writeUnsignedIntIntoEEPROM(SavedRedScoreADDR, countR);
+    writeLongIntoEEPROM(SavedGameTimerADDR, timer);
+    EEPROM.update(ScoringTeamADDR, 0);
     timer = 0;
     countB = 0;
     countR = 0;

@@ -40,11 +40,11 @@ void displayScores() {
     lcd.home();
     lcd.print(F("SCORES"));
     lcd.setCursor(11,0);
-    lcd.print(secondsToHMS(EEPROM.read(SavedGameTimerADDR)));
+    lcd.print(secondsToHMS(readLongFromEEPROM(SavedGameTimerADDR)));
     lcd.setCursor(0,1);
     lcd.print("B: ");
-    lcd.print(EEPROM.read(SavedBlueScoreADDR));
+    lcd.print(readUnsignedIntFromEEPROM(SavedBlueScoreADDR));
     lcd.setCursor(8,1);
     lcd.print("R: ");
-    lcd.print(EEPROM.read(SavedRedScoreADDR));
+    lcd.print(readUnsignedIntFromEEPROM(SavedRedScoreADDR));
 }
