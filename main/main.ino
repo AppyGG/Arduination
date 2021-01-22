@@ -6,9 +6,9 @@ LiquidCrystal lcd(7, 6, 5, 4, 3, 2);
 // constants won't change. They're used here to set pin numbers
 const byte buttonPinB = 13;     // blue button pin
 const byte buttonPinR = 11;     // red button pin
-const byte ledPinB =  9;      // blue LED pin
-const byte ledPinR =  8;      // red LED pin
-const byte btnOk = 12;         // btn OK for menus
+const byte ledPinB =  9;        // blue LED pin
+const byte ledPinR =  8;        // red LED pin
+const byte btnOk = 12;          // btn OK for menus
 const int GameRunningADDR = 0;        // Byte address of running game status
 const int BlueScoreADDR = 4;          // Byte address of running game blue score
 const int RedScoreADDR = 8;           // Byte address of running game red score
@@ -39,9 +39,11 @@ bool scoresDisplayed = false;
 // Game timer
 unsigned long timer = 0;
 unsigned long previousMillis = 0;
-const long interval = 1000;
+unsigned long interval = 1000;
 unsigned int counterPoint = 0;
 const byte pointInterval = 10;
+
+// CUSTOM CHARs
 
 // Pause char
 byte pauseChar[8] = {
@@ -52,12 +54,85 @@ byte pauseChar[8] = {
   B11011,
   B11011,
   B00000,
+  B00000,
+};
+
+byte scrollBarTopChar1[8] = {
+  B00111,
+  B00011,
+  B00011,
+  B00011,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+};
+
+byte scrollBarTopChar2[8] = {
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00111,
+};
+
+byte scrollBarMid1Char[8] = {
+  B00111,
+  B00000,
+  B00000,
+  B00000,
+  B00011,
+  B00011,
+  B00011,
+  B00011,
+};
+
+byte scrollBarMid2Char[8] = {
+  B00011,
+  B00011,
+  B00011,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00111,
+};
+
+byte scrollBarBotChar1[8] = {
+  B00111,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+};
+
+byte scrollBarBotChar2[8] = {
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00011,
+  B00011,
+  B00011,
+  B00111,
 };
 
 void setup() {
   Serial.begin(9600); // open the serial port at 9600 bps
 
   lcd.createChar(0, pauseChar);
+  lcd.createChar(1, scrollBarTopChar1);
+  lcd.createChar(2, scrollBarTopChar2);
+  lcd.createChar(3, scrollBarMid1Char);
+  lcd.createChar(4, scrollBarMid2Char);
+  lcd.createChar(5, scrollBarBotChar1);
+  lcd.createChar(6, scrollBarBotChar2);
   lcd.begin(16, 2); // Initialize LCD
   lcd.home();
   lcd.clear();
@@ -101,12 +176,7 @@ void loop() {
         lcd.clear();
         scoresDisplayed = false;
         generalStatus = 0;
-      } else if (generalStatus == 2) { // On game screen: QUIT GAME
-        lcd.clear();
-        gameInitialized = false;
-        generalStatus = 0;
-        eraseRunningGameScores();
-      } else if (generalStatus == 3) { // Pause screen : QUIT GAME / RESET SCORES
+      } else if (generalStatus == 2 || generalStatus == 3) { // Pause screen : QUIT GAME / RESET SCORES
         lcd.clear();
         gameInitialized = false;
         eraseRunningGameScores();
@@ -152,22 +222,40 @@ void loop() {
     case 3:
       paused();
       break;
+    case 4:
+      settings();
+      break;
+  }
+  if(digitalRead(buttonPinB) == LOW){
+      Serial.println("0");
+  } else {
+      Serial.println("1");
   }
 }
 
 void menuNavigate() {
-  if (menuState == 1) {
-    menuState = 0;
-  } else {
+  if (menuState == 0) {
     menuState = 1;
+  } else if (menuState == 1) {
+    menuState = 2;
+  } else if (menuState == 2) {
+    menuState = 3;
+  } else {
+    menuState = 0;
   }
 }
 
 void menuValidate() {
-  if (menuState == 0) {
+  if (menuState == 0) { // Scores
     generalStatus = 1;
-  } else {
+  } else if (menuState == 1) { // Start gamemode Points
+    interval = 1000;
     generalStatus = 2;
+  } else if (menuState == 2) { // Start gamemode Timer
+    interval = 100;
+    generalStatus = 2;
+  } else {
+    generalStatus = 4;
   }
 }
 

@@ -62,5 +62,7 @@ void eraseRunningGameScores() {
     timer = 0;
     countB = 0;
     countR = 0;
+    stateLED = 2;
+    menuState = 0;
   }
 }
