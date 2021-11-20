@@ -1,4 +1,8 @@
 void game() {
+  if (!gameInitialized) {
+    displayInGame();
+  }
+
   if (digitalRead(buttonPinB) == LOW && stateLED != 0) {
     stateLED = 0;
     counterPoint = 0;
@@ -18,15 +22,17 @@ void game() {
       // LED Management
       if (stateLED == 0) { // Blue
         countB++;
-        saveRunnningGameScores();
         digitalWrite(ledPinB, HIGH);
         digitalWrite(ledPinR, LOW);
+        saveRunnningGameScores();
       } else if (stateLED == 1) { // Red
         countR++;
-        saveRunnningGameScores();
         digitalWrite(ledPinR, HIGH);
         digitalWrite(ledPinB, LOW);
+        saveRunnningGameScores();        
       }
+      // Update display only if score changes
+      displayInGame();
       counterPoint = 0;
     } else {
       counterPoint++;
@@ -34,7 +40,9 @@ void game() {
     // save the last time you blinked the LED
     previousMillis = currentMillis;
     timer++;
-    displayInGame();
+    if (menuState == 1) {
+      displayInGame();
+    }
   }
 }
 
@@ -42,14 +50,31 @@ void paused() {
   displayInGame();
   lcd.setCursor(14, 1);
   lcd.write(byte(0));
+  digitalWrite(ledPinR, LOW);
+  digitalWrite(ledPinB, LOW);
 }
 
 void saveRunnningGameScores() {
   EEPROM.update(GameRunningADDR, 1);
-  writeUnsignedIntIntoEEPROM(BlueScoreADDR, countB);
-  writeUnsignedIntIntoEEPROM(RedScoreADDR, countR);
-  writeLongIntoEEPROM(GameTimerADDR, timer);
-  EEPROM.update(ScoringTeamADDR, stateLED);
+  if (menuState == 2) {
+    if (savingInc == 0) {
+        writeLongIntoEEPROM(GameTimerADDR, timer);
+        writeUnsignedIntIntoEEPROM(BlueScoreADDR, countB);
+        writeUnsignedIntIntoEEPROM(RedScoreADDR, countR);
+        EEPROM.update(ScoringTeamADDR, stateLED);
+        savingInc = 0;
+    }
+  } else if (menuState == 3) {
+    if (savingInc == 10) {
+      writeLongIntoEEPROM(GameTimerADDR, (timer / 10));
+      writeUnsignedIntIntoEEPROM(BlueScoreADDR, countB);
+      writeUnsignedIntIntoEEPROM(RedScoreADDR, countR);
+      EEPROM.update(ScoringTeamADDR, stateLED);
+      savingInc = 0;
+    } else{
+      savingInc++;
+    }
+  }
 }
 
 void eraseRunningGameScores() {
@@ -64,5 +89,6 @@ void eraseRunningGameScores() {
     countR = 0;
     stateLED = 2;
     menuState = 0;
+    savingInc = 0;
   }
 }
